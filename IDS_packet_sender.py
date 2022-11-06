@@ -2,26 +2,30 @@ from optparse import OptionParser
 import subprocess
 #import scapy.all as scapy
 from scapy.all import *
-#import IP
+#from scapy import *
 
+data="jokes"
 parser=OptionParser()
 
 ids_packet_type=0
-def send_keyloggin_packets():
+def send_keylogging_packets(pkt_count,destination_mac,destination_ip):
 
     d=0
 
-def send_scans_packets():
+def send_scans_packets(pkt_count,destination_mac,destination_ip):
     t=0 
 
 
 
-def send_exfiltration_packets(src_ip,dest,ip,ip_flags,src_port,dest_port,tcp_flags):
-    #for i in range(exfiltration):
-    #    ip = IP(src=src_ip, dst=dst_ip, id=ip_id, flags=ip_flags)
-    #    tcp = ip / TCP(sport=src_port, dport=dst_port, flags='PA',
-                    #seq=seq_n, ack=ack_n) / test_content
-    t=0
+def send_exfiltration_packets(pkt_count,destination_mac,destination_ip):
+    for i in range(pkt_count):
+        ip = IP(dst=destination_ip, )
+        print(ip.summary())
+    #   ip = IP(src=src_ip, dst=dst_ip, id=ip_id, flags=ip_flags)
+        tcp = ip / TCP(sport=8080, dport=21, flags='PA',
+                    seq=71, ack=67) / data
+    
+        send(tcp)
 
     #    ip=IP()
     #    packet=scapy.
@@ -31,7 +35,7 @@ def send_exfiltration_packets(src_ip,dest,ip,ip_flags,src_port,dest_port,tcp_fla
 
 parser.add_option('-t', dest = 'packet_type',
                       type = 'int',
-                      help = '1: Exfiltration, 2: Keyloggin, 3: Scans',
+                      help = '1: Exfiltration, 2: Keylogging, 3: Scans',
                       default=0)    
 
 parser.add_option('-c', dest = 'packet_count',
@@ -65,6 +69,15 @@ print(options)
 if ids_packet_type==1:
     send_exfiltration_packets(pkt_count,destination_mac,destination_ip)
 elif ids_packet_type==2:
-    send_keyloggin_packets()
+    send_keylogging_packets(pkt_count,destination_mac,destination_ip)
 elif ids_packet_type==3:
-    send_scans_packets()        
+    send_scans_packets(pkt_count,destination_mac,destination_ip)  
+elif ids_packet_type==0:  #default is to send all 3
+    send_exfiltration_packets(pkt_count,destination_mac,destination_ip)
+    send_keylogging_packets(pkt_count,destination_mac,destination_ip)
+    send_scans_packets(pkt_count,destination_mac,destination_ip)
+else:
+    print("Invalid Option")
+    exit()
+
+
