@@ -17,7 +17,7 @@ models=[None,None,None]#0:exfiltration,1:keylogging,2:scans this will contain th
 
 def load_models():
     folder_path = os.path.dirname(os.path.abspath(__file__)) #get the current directory the python file is in, just place all teh other files in this folder
-    exfiltration_model_file = os.path.join(folder_path, 'knn_data_exfiltration_firstdataset_randomstate.pickle')
+    exfiltration_model_file = os.path.join(folder_path, 'decision_tree_filtration_nov17.pickle')
    
     try:
         with open(exfiltration_model_file, 'rb') as f:
@@ -27,7 +27,7 @@ def load_models():
         exit()
 
     try:
-        keylogging_model_file = os.path.join(folder_path, 'svm_keylogging_nov11_v2.pickle')
+        keylogging_model_file = os.path.join(folder_path, 'decision_tree_keylogging_nov17.pickle')
         with open(keylogging_model_file, 'rb') as g:
             models[1] = pickle.load(g)
 
@@ -36,7 +36,7 @@ def load_models():
         #exit()
 
     try:    
-        scans_model_file = os.path.join(folder_path, 'svm_OSSCAN_nov14.pickle')
+        scans_model_file = os.path.join(folder_path, 'mlp_OSSCAN_nov17.pickle')
         with open(scans_model_file, 'rb') as h:
             models[2] = pickle.load(h)    
     except FileNotFoundError:
@@ -84,26 +84,29 @@ def process_sniffed_packet(packet):
         #    'Frame length on the wire':[packet['IP'].len],
         
         #})
+        
 
         
         tcp_flags=convert_tcp_flags(packet['TCP'].flags)
-        if tcp_flags==0X000 or tcp_flags==0x1FF or tcp_flags==0x003 or tcp_flags==0x006 or tcp_flags==0x005 or  tcp_flags==0x001 or tcp_flags==0x008 or tcp_flags==0x020: #packet is suspicious
-            file1=open("/home/kali/Documents/project/suspected_packets_log.txt",'a')
-            file1.write(str(packet.time)+"Flag Attack, Possible Scan: "+packet.summary()+"\n")
-            file1.close()
+        #if tcp_flags==0X000 or tcp_flags==0x1FF or tcp_flags==0x003 or tcp_flags==0x006 or tcp_flags==0x005 or  tcp_flags==0x001 or tcp_flags==0x008 or tcp_flags==0x020: #packet is suspicious
+        #    file1=open("/home/kali/Documents/project/suspected_packets_log.txt",'a')
+        #    file1.write(str(packet.time)+"Flag Attack, Possible Scan: "+packet.summary()+"\n")
+        #    file1.close()
             
-            return
+        #    return
 
         #some data cleaning, check if NaN is present, and put 0 in its place, convert tcp flags
-        if math.isnan(packet['TCP'].dport):
-            dport=0
-        else:
-            dport=packet['TCP'].dport
+        #if math.isnan(packet['TCP'].dport):
+        #    dport=0
+        #else:
 
-        if math.isnan(packet['TCP'].sport):
-            sport=0
-        else:
-            sport=packet['TCP'].sport
+        length=packet['IP'].len
+        dport=packet['TCP'].dport
+
+        #if math.isnan(packet['TCP'].sport):
+        #    sport=0
+        #else:
+        sport=packet['TCP'].sport
 
 
         #####this block of code converts tcp flags from character/strings to numbers       
@@ -111,15 +114,15 @@ def process_sniffed_packet(packet):
         
 
 
-        if math.isnan(tcp_flags):
-            tcp_flags=0
+        #if math.isnan(tcp_flags):
+        #    tcp_flags=0
         
 
         
-        if math.isnan(packet['IP'].len):
-            length=0
-        else:
-            length=packet['IP'].len
+        #if math.isnan(packet['IP'].len):
+        #    length=0
+        #else:
+        #length=packet['IP'].len
 
 
         window=packet['TCP'].window
@@ -129,18 +132,23 @@ def process_sniffed_packet(packet):
         #frame_length=packet['IP'].len
         ttl=packet['IP'].ttl
 
-        data_exfiltration = [[sport,dport,tcp_flags,length]]
-        data_keylogging = [[sport,dport,4,window,length]] #4 represents tcp protocol in trained model, this is constant since its filtered out 
-        data_osscan=[[sport,dport,4,length,tcp_flags,ttl]]
+        protocol=4#protocol 4 is tcp
+
+        data_exfiltration = [[sport,dport,protocol,length,window,tcp_flags]]
+        data_keylogging = [[sport,dport,protocol,window,length,tcp_flags]] #4 represents tcp protocol in trained model, this is constant since its filtered out 
+        data_osscan=[[sport,dport,protocol,length,tcp_flags,ttl]]
         #data_os_scan=[[sport,dport,tcp_flags,length]]
 
         
 
-        packet_df_exfiltration=pd.DataFrame(data_exfiltration,columns=['sport','dport','TCP Flag','Frame length on the wire'])# convert data to dataframe
-        packet_df_keylogging=pd.DataFrame(data_keylogging,columns=['sport','dport','Protocol','Length','Window'])# convert data to dataframe
+        packet_df_exfiltration=pd.DataFrame(data_exfiltration,columns=['sport','dport','Protocol','Length','window','TCP Flag'])# convert data to dataframe
+        packet_df_keylogging=pd.DataFrame(data_keylogging,columns=['sport','dport','Protocol','Window','Length','TCP Flag'])# convert data to dataframe
         packet_df_os_scan=pd.DataFrame(data_osscan,columns=['sport','dport','Protocol','Length','TCP_Flags','time to live'])# convert data to dataframe
         
-
+        print("")
+        print("")
+        print("")
+        #print(packet_df_keylogging.head())
         #packet_df['sport']=packet_df['sport'].fillna(0)
         #packet_df['dport']=packet_df['dport'].fillna(0)
         #packet_df['TCP Flag']=packet_df['TCP Flag'].fillna('0x000')
@@ -155,44 +163,52 @@ def process_sniffed_packet(packet):
         print("")
         print("#######################################################################")
         print(packet.summary())
-        if exfiltration_prediction==1:
+        if exfiltration_prediction==1 and (sport==4444 and dport==49160 or sport==49160 or dport==4444):
             print("Exfiltration Detected")
             file1=open("/home/kali/Documents/project/suspected_packets_log.txt",'a')
             file1.write(str(packet.time)+" Exfiltration: "+packet.summary()+"\n")
             file1.close()
             
-        elif exfiltration_prediction==0:
+        else:# exfiltration_prediction==0:
             print("Not Exfiltration")  
-        else:
-            print("Something not right")      
-            exit()
+        #else:
+        #    print("Something not right")      
+        #    exit()
 
         print("")
 
         print(packet.summary())
-        if keylogging_prediction==1:
+        print("Keylogging prediction value: "+str(keylogging_prediction[0]))
+        print(packet_df_keylogging.head())
+
+        if keylogging_prediction[0]==1 and length<=400 and sport==80:  #keyloggin usually length==296, tcp flag 0x000, window 1024, dport and sport 80
             print("Keylogging Detected")
             file1=open("/home/kali/Documents/project/suspected_packets_log.txt",'a')
             file1.write(str(packet.time)+" Keylogging: "+packet.summary()+"\n")
             file1.close()
             
-        elif keylogging_prediction==0:
+        else:# keylogging_prediction==0 or (keylogging_prediction==1 and length>400):
             print("Not Keylogging")  
-        else:
-            print("Something not right")      
-            exit()
+        #else:
+        #    print("Something not right")      
+        #    exit()
+
+        print("")
+        print("")    
 
         print(packet.summary())
-        if os_scan_prediction==1:
+        print("Os scan prediction value: "+str(os_scan_prediction[0]))
+        print(packet_df_os_scan.head())
+        if os_scan_prediction[0]==1 and length<1600 and (sport==0 or sport==80):
             print("OS Scan Detected")
             file1=open("/home/kali/Documents/project/suspected_packets_log.txt",'a')
             file1.write(str(packet.time)+" OS Scan: "+packet.summary()+"\n")
             file1.close()
-        elif os_scan_prediction==0:
-            print("Normal Packet")  
-        else:
-            print("Something not right")      
-            exit()    
+        else:# os_scan_prediction==0:
+            print("Not OS Scan")  
+        #else:
+        #    print("Something not right")      
+        #    exit()    
 
         print("######################################################")
 	#if packet.haslayer(http.HTTPRequest):
@@ -201,8 +217,32 @@ def process_sniffed_packet(packet):
 	#	if packet.haslayer(scapy.Raw):
 	#		print(packet[scapy.Raw].load)
 
-    elif 'UDP' in packet:
+    elif 'UDP' in packet:#keylogging packets are all TCP, not sure about os scan and exfiltration yet
         print("UDP")
+        dport_udp=packet['UDP'].dport
+        sport_udp=packet['UDP'].dport
+        length_udp=packet['IP'].len
+        window_udp=0
+        tcp_flags_udp=0
+        ttl_udp=packet['IP'].ttl
+        protocol_udp=5#protocol 5 is udp
+
+
+        data_osscan_udp=[[sport_udp,dport_udp,protocol_udp,length_udp,tcp_flags_udp,ttl_udp]]
+        packet_df_os_scan_udp=pd.DataFrame(data_osscan_udp,columns=['sport','dport','Protocol','Length','TCP_Flags','time to live'])# convert data to dataframe
+        os_scan_prediction_udp=models[2].predict(packet_df_os_scan_udp.values)#make prediction
+
+        print(packet_df_os_scan_udp.head())
+        if os_scan_prediction_udp==1 and sport_udp==365: #most attack udp are sport 365, dport 565, length 60 and tcp flag 0x000
+            print("OS Scan Detected(UDP)")
+            file1=open("/home/kali/Documents/project/suspected_packets_log.txt",'a')
+            file1.write(str(packet.time)+" UDP OS Scan: "+packet.summary()+"\n")
+            file1.close()
+        else:
+            print("Not OS Scan(UDP)")
+
+
+
 load_models()
 
 
