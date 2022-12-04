@@ -30,10 +30,10 @@ def make_prediction(models_array,dataframevalues):#use 4 models, if all predict 
 def load_models():
     folder_path = os.path.dirname(os.path.abspath(__file__)) #get the current directory the python file is in, just place all teh other files in this folder
     exfiltration_model_files=[None,None,None,None]
-    exfiltration_model_files[0] = os.path.join(folder_path, 'svm_exfiltration_nov17.pickle')
-    exfiltration_model_files[1] = os.path.join(folder_path, 'adaboost_exfiltration_nov17.pickle')
-    exfiltration_model_files[2] = os.path.join(folder_path, 'decision_tree_filtration_nov17.pickle')
-    exfiltration_model_files[3] = os.path.join(folder_path, 'mlp_exfiltration_nov17.pickle') 
+    exfiltration_model_files[0] = os.path.join(folder_path, 'svm_exfiltration_dec04.pickle')
+    exfiltration_model_files[1] = os.path.join(folder_path, 'adaboost_exfiltration_dec04.pickle')
+    exfiltration_model_files[2] = os.path.join(folder_path, 'decision_tree_filtration_dec04.pickle')
+    exfiltration_model_files[3] = os.path.join(folder_path, 'mlp_exfiltration_dec04.pickle') 
     try:
         for i in range(0,len(exfiltration_model_files)):
             with open(exfiltration_model_files[i], 'rb') as f:
@@ -46,10 +46,10 @@ def load_models():
 
 
     keylogging_model_files=[None,None,None,None]
-    keylogging_model_files[0] = os.path.join(folder_path, 'svm_keylogging_nov17.pickle')
-    keylogging_model_files[1] = os.path.join(folder_path, 'adaboost_keylogging_nov17.pickle')
-    keylogging_model_files[2] = os.path.join(folder_path, 'decision_tree_keylogging_nov17.pickle')
-    keylogging_model_files[3] = os.path.join(folder_path, 'mlp_keylogging_nov17.pickle')
+    keylogging_model_files[0] = os.path.join(folder_path, 'svm_keylogging_dec04.pickle')
+    keylogging_model_files[1] = os.path.join(folder_path, 'adaboost_keylogging_dec04.pickle')
+    keylogging_model_files[2] = os.path.join(folder_path, 'decision_tree_keylogging_dec04.pickle')
+    keylogging_model_files[3] = os.path.join(folder_path, 'mlp_keylogging_dec04.pickle')
     try:
         #keylogging_model_file = os.path.join(folder_path, 'decision_tree_keylogging_nov17.pickle')
         for i in range(0,len(keylogging_model_files)):
@@ -63,10 +63,10 @@ def load_models():
 
 
     os_scan_model_files=[None,None,None,None]
-    os_scan_model_files[0] = os.path.join(folder_path, 'svm_OSSCAN_nov17.pickle')
-    os_scan_model_files[1] = os.path.join(folder_path, 'adaboost_OSSCAN_nov17.pickle')
-    os_scan_model_files[2] = os.path.join(folder_path, 'decission_tree_OSSCAN_nov17.pickle')
-    os_scan_model_files[3] = os.path.join(folder_path, 'mlp_OSSCAN_nov17.pickle')
+    os_scan_model_files[0] = os.path.join(folder_path, 'svm_OSSCAN_dec04.pickle')
+    os_scan_model_files[1] = os.path.join(folder_path, 'adaboost_OSSCAN_dec04.pickle')
+    os_scan_model_files[2] = os.path.join(folder_path, 'decission_tree_OSSCAN_dec04.pickle')
+    os_scan_model_files[3] = os.path.join(folder_path, 'mlp_OSSCAN_dec04.pickle')
     try:    
         for i in range(0,len(os_scan_model_files)):
             with open(os_scan_model_files[i], 'rb') as h:
@@ -77,10 +77,10 @@ def load_models():
 
 
     service_scan_model_files=[None,None,None,None]
-    service_scan_model_files[0] = os.path.join(folder_path, 'svm_SERVICE_SCAN_dec03.pickle')
-    service_scan_model_files[1] = os.path.join(folder_path, 'adaboost_SERVICE_SCAN_dec03.pickle')
-    service_scan_model_files[2] = os.path.join(folder_path, 'decission_tree_SERVICE_SCAN_dec03.pickle')
-    service_scan_model_files[3] = os.path.join(folder_path, 'mlp_SERVICE_SCAN_dec03.pickle')
+    service_scan_model_files[0] = os.path.join(folder_path, 'svm_SERVICE_SCAN_dec04.pickle')
+    service_scan_model_files[1] = os.path.join(folder_path, 'adaboost_SERVICE_SCAN_dec04.pickle')
+    service_scan_model_files[2] = os.path.join(folder_path, 'decission_tree_SERVICE_SCAN_dec04.pickle')
+    service_scan_model_files[3] = os.path.join(folder_path, 'mlp_SERVICE_SCAN_dec04.pickle')
     try:    
         for i in range(0,len(service_scan_model_files)):    
             with open(service_scan_model_files[i], 'rb') as h:
