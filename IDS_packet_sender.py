@@ -11,7 +11,7 @@ parser=OptionParser()
 
 ids_packet_type=0
 
-def send_keylogging_packets(pkt_count,destination_mac,destination_ip,protocol,src_port,dest_port,window_,tcp_flag,length):
+def send_keylogging_packets(pkt_count,destination_mac,destination_ip,protocol,src_port,dest_port,window_,tcp_flag,length,interval_):
     for i in range(pkt_count):
         ip = IP(dst=destination_ip)
         
@@ -31,10 +31,10 @@ def send_keylogging_packets(pkt_count,destination_mac,destination_ip,protocol,sr
         packet = ip / TCP(sport=src_port, dport=dest_port, flags=tcp_flago,window=window_) / data
 
         send(packet)    
-        time.sleep(1)    
+        time.sleep(interval_)    
     
 
-def send_os_scan_packets(pkt_count,destination_mac,destination_ip,protocol,src_port,dest_port,window_,tcp_flag,length):
+def send_os_scan_packets(pkt_count,destination_mac,destination_ip,protocol,src_port,dest_port,window_,tcp_flag,length,interval_):
     for i in range(pkt_count):
         ip = IP(dst=destination_ip)
         
@@ -55,9 +55,9 @@ def send_os_scan_packets(pkt_count,destination_mac,destination_ip,protocol,src_p
 
         send(packet)
 
-        time.sleep(0.5)
+        time.sleep(interval_)
 
-def send_service_scan_packets(pkt_count,destination_mac,destination_ip,protocol,src_port,dest_port,window_,tcp_flag,length):
+def send_service_scan_packets(pkt_count,destination_mac,destination_ip,protocol,src_port,dest_port,window_,tcp_flag,length,interval_):
     for i in range(pkt_count):
         ip = IP(dst=destination_ip)
         
@@ -78,10 +78,10 @@ def send_service_scan_packets(pkt_count,destination_mac,destination_ip,protocol,
 
         send(packet)
 
-        time.sleep(0.5)
+        time.sleep(interval_)
 
 
-def send_exfiltration_packets(pkt_count,destination_mac,destination_ip,protocol,src_port,dest_port,window_,tcp_flag,length):
+def send_exfiltration_packets(pkt_count,destination_mac,destination_ip,protocol,src_port,dest_port,window_,tcp_flag,length,interval_):
     for i in range(pkt_count):
         ip = IP(dst=destination_ip, ttl=64)
         
@@ -104,11 +104,11 @@ def send_exfiltration_packets(pkt_count,destination_mac,destination_ip,protocol,
 
         send(packet)
 
-        time.sleep(0.75)
+        time.sleep(interval_)
 
 
  
-def send_custom_packet(pkt_count,destination_mac,destination_ip,protocol,src_port,dest_port,window_,tcp_flag,length,ttl_):
+def send_custom_packet(pkt_count,destination_mac,destination_ip,protocol,src_port,dest_port,window_,tcp_flag,length,ttl_,interval_):
     for i in range(pkt_count):
         ip = IP(dst=destination_ip, ttl=ttl_)
         data=Raw(RandString(size=length))
@@ -119,7 +119,7 @@ def send_custom_packet(pkt_count,destination_mac,destination_ip,protocol,src_por
             packet = ip / TCP(sport=src_port, dport=dest_port, flags=tcp_flago,window=window_) / data  
         send(packet)
 
-        time.sleep(0.5)
+        time.sleep(interval_)
 
 
 
@@ -179,6 +179,10 @@ parser.add_option('-g', dest = 'ttl',
                       help = 'time to live',
                       default=64)  
 
+parser.add_option('-b', dest = 'interval',
+                      type = float,
+                      help = 'time in seconds between each packet being sent when -c option is greater than 1',
+                      default=0.5)                        
 
 (options, args) = parser.parse_args()
 
@@ -195,25 +199,26 @@ windows=options.window_size
 tcp_flag=options.tcp_flags
 length=options.pkt_length
 ttl=options.ttl
+interval_=options.interval
 
 
 print(options)
 
 if ids_packet_type==1:
-    send_exfiltration_packets(pkt_count,destination_mac,destination_ip)
+    send_exfiltration_packets(pkt_count,destination_mac,destination_ip,interval_)
 elif ids_packet_type==2:
-    send_keylogging_packets(pkt_count,destination_mac,destination_ip)
+    send_keylogging_packets(pkt_count,destination_mac,destination_ip,interval_)
 elif ids_packet_type==3:
-    send_os_scan_packets(pkt_count,destination_mac,destination_ip)  
+    send_os_scan_packets(pkt_count,destination_mac,destination_ip,interval_)  
 elif ids_packet_type==4:
-    send_service_scan_packets(pkt_count,destination_mac,destination_ip)
+    send_service_scan_packets(pkt_count,destination_mac,destination_ip,interval_)
 elif ids_packet_type==5:#send customer packets using options
-    send_custom_packet(pkt_count,destination_mac,destination_ip,protocol,sport,dport,windows,tcp_flag,length,ttl)
+    send_custom_packet(pkt_count,destination_mac,destination_ip,protocol,sport,dport,windows,tcp_flag,length,ttl,interval_)
 elif ids_packet_type==0:  #default is to send all 3
-    send_exfiltration_packets(pkt_count,destination_mac,destination_ip,protocol)
-    send_keylogging_packets(pkt_count,destination_mac,destination_ip)
-    send_os_scan_packets(pkt_count,destination_mac,destination_ip)
-    send_service_scan_packets(pkt_count,destination_mac,destination_ip)
+    send_exfiltration_packets(pkt_count,destination_mac,destination_ip,protocol,interval_)
+    send_keylogging_packets(pkt_count,destination_mac,destination_ip,interval_)
+    send_os_scan_packets(pkt_count,destination_mac,destination_ip,interval_)
+    send_service_scan_packets(pkt_count,destination_mac,destination_ip,interval_)
 else:    
     print("Invalid Option")
     exit()
