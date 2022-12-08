@@ -29,6 +29,16 @@ with open(k_standard_scaler_file,'rb') as j:
     keylogging_scaler=pickle.load(j)  
 
 
+os_scan_model_file = os.path.join(folder_path, 'decission_tree_OSSCAN_dec08_scaled.pickle')
+with open(os_scan_model_file,'rb') as g:
+    os_scan_model=pickle.load(g)
+
+o_standard_scaler_file=os.path.join(folder_path,'os_scan_scaler_.pkl')
+with open(o_standard_scaler_file,'rb') as j:
+    os_scan_scaler=pickle.load(j)  
+
+
+
 
 for packet in capture.sniff_continuously():
     if hasattr(packet, 'tcp'):
@@ -103,25 +113,30 @@ for packet in capture.sniff_continuously():
 
         exfiltration_df=[[sport,dport,protocol,length,window,tcp_flags,bytes_in_flight,push_bytes_sent,time_since_previous_frame_in_stream]]
         keylogging_df=[[sport,dport,protocol,length,window,tcp_flags,bytes_in_flight,time_since_previous_frame_in_stream]]
+        os_scan_df=[[sport,dport,protocol,length,window,tcp_flags,bytes_in_flight,time_since_previous_frame_in_stream,0]]
         #exfiltration_df=[[80,80,4,296,1024,0,242,14520,0.040332]]# this is detected
         #exfiltration_df=[[80,80,4,296,1024,0,242,14520565,0.040332]]
 
         
         packet_df_exfiltration=pd.DataFrame(exfiltration_df,columns=['sport','dport','Protocol','Length','window','TCP Flag','Bytes in flight','Bytes sent since last PSH flag','Time since previous frame in this TCP stream(TCP)'])
         packet_df_keylogging=pd.DataFrame(keylogging_df,columns=['sport','dport','Protocol','Length','window','TCP Flag','Bytes in flight','Time since previous frame in this TCP stream(TCP)'])
+        packet_df_os_scan=pd.DataFrame(os_scan_df,columns=['sport','dport','Protocol','Length','window','TCP Flag','Bytes in flight','Time since previous frame in this TCP stream(TCP)','time_since_previous_frame_udp'])
+        print(packet_df_os_scan)
         
-        print('\n pre scaling keylogging dataframe')
-        print(packet_df_keylogging)
+        #print('\n pre scaling keylogging dataframe')
+        #print(packet_df_keylogging)
 
         
         packet_df_exfiltration=exfiltration_scaler.transform(packet_df_exfiltration.values)
         packet_df_keylogging=keylogging_scaler.transform(packet_df_keylogging.values)
+        packet_df_os_scan=os_scan_scaler.transform(packet_df_os_scan.values)
         
-        print("\n post scaling keylogging dataframe")
-        print(packet_df_keylogging)
+        #print("\n post scaling keylogging dataframe")
+        #print(packet_df_keylogging)
         
         exfiltration_prediction=exfiltration_model.predict(packet_df_exfiltration)[0]
         keylogging_prediction=keylogging_model.predict(packet_df_keylogging)[0]
+        os_scan_prediction=os_scan_model.predict(packet_df_os_scan)[0]
 
         #print(packet_df_exfiltration)
         if exfiltration_prediction==1:
@@ -135,7 +150,7 @@ for packet in capture.sniff_continuously():
 
 
 
-        print(packet_df_keylogging)
+        #print(packet_df_keylogging)
         if keylogging_prediction==1:
             print("\n&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
             print("Keylogging Detected\n")
@@ -144,6 +159,24 @@ for packet in capture.sniff_continuously():
             print("Normal Packet(Not Keylogging)\n")
         else:
             print("Something wrong")    
+
+
+        #print(os_scan_df)
+
+        if os_scan_prediction==1:
+            print("\n&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+            print("OS Scan Detected\n")
+        elif os_scan_prediction==0:
+            print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+            print("Normal Packet(Not OS Scan)\n")
+        else:
+            print("Something wrong")        
+
+
+        print("")
+        print("")
+        print("")
+
         
         #print("\nrtt")
         #print(packet['TCP'].irtt)
@@ -154,3 +187,45 @@ for packet in capture.sniff_continuously():
         #destination_address = packet.ip.dst
         #destination_port = packet[packet.transport_layer].dstport
         #print(f'{protocol}  {source_address}:{source_port} --> {destination_address}:{destination_port}')
+    elif hasattr(packet, 'udp'):
+        time_since_previous_frame_in_stream=0#packet['TCP'].time_delta
+        time_since_first_frame_in_stream=0#packet['TCP'].time_relative
+        time_since_first_frame_udp=packet['UDP'].time_relative
+        
+        #print(dir(packet['TCP']))
+        sport=packet['UDP'].srcport
+        dport=packet['UDP'].dstport   
+        protocol=5#packet.transport_layer
+        length=packet['UDP'].length
+        window=0#packet['TCP'].window_size
+
+        tcp_flags='0x000'#packet['TCP'].flags
+        time_since_previous_frame_in_stream=0 
+        tcp_flags=int(tcp_flags,16)
+        bytes_in_flight=0
+
+        os_scan_df=[[sport,dport,protocol,length,window,tcp_flags,bytes_in_flight,time_since_previous_frame_in_stream,time_since_first_frame_udp]]
+        
+        packet_df_os_scan=pd.DataFrame(os_scan_df,columns=['sport','dport','Protocol','Length','window','TCP Flag','Bytes in flight','Time since previous frame in this TCP stream(TCP)','time_since_first_frame_udp'])
+        print(packet_df_os_scan)
+
+        packet_df_os_scan=os_scan_scaler.transform(packet_df_os_scan.values)
+
+        os_scan_prediction_udp=os_scan_model.predict(packet_df_os_scan)[0]
+
+
+        if os_scan_prediction_udp==1:
+            print("\n&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+            print("OS Scan Detected(UDP)\n")
+        elif os_scan_prediction_udp==0:
+            print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+            print("Normal Packet(Not OS Scan-UDP)\n")
+        else:
+            print("Something wrong")     
+
+
+
+
+        print("")
+        print("")
+        print("")    
