@@ -12,7 +12,11 @@ parser=OptionParser()
 ids_packet_type=0
 
 def send_keylogging_packets(pkt_count,destination_mac,destination_ip,protocol,interval_):
-    
+    if protocol==2:
+        print("\nKeylogging option only send TCP packets: chaneg -k value to 1")
+        exit()
+
+
     for i in range(pkt_count):
         ip = IP(dst=destination_ip,ttl=64)
         
@@ -38,14 +42,14 @@ def send_keylogging_packets(pkt_count,destination_mac,destination_ip,protocol,in
 def send_os_scan_packets(pkt_count,destination_mac,destination_ip,protocol,interval_):
     if protocol==1:
         for i in range(pkt_count):
-            ttl_=127
+            ttl_=64
             ip = IP(dst=destination_ip,ttl=ttl_)
             
-            src_port=0
-            dest_port=0
-            tcp_flag='0x000'
-            window_=1024
-            length=1077#300
+            src_port=3306
+            dest_port=51826
+            tcp_flag='0x018'
+            window_=81
+            length=60#300
         #   ip = IP(src=src_ip, dst=dst_ip, id=ip_id, flags=ip_flags)
             data=Raw(RandString(size=length))
             #data="Jokes"
@@ -83,36 +87,63 @@ def send_os_scan_packets(pkt_count,destination_mac,destination_ip,protocol,inter
             time.sleep(interval_)         
 
 def send_service_scan_packets(pkt_count,destination_mac,destination_ip,protocol,interval_):
-    for i in range(pkt_count):
-        ip = IP(dst=destination_ip)
-        
-        src_port=0
-        dest_port=0
-        tcp_flag='0x000'
-        window_=1024
-        length=300
-    #   ip = IP(src=src_ip, dst=dst_ip, id=ip_id, flags=ip_flags)
-        data=Raw(RandString(size=length))
-        #data="Jokes"
-        tcp_flago=int(tcp_flag,16)
-        
-        print(tcp_flago)
-        print(window_)
+    if protocol==1:
+        for i in range(pkt_count):
+            ttl_=37
+            ip = IP(dst=destination_ip,ttl=ttl_)
+            
+            src_port=36663
+            dest_port=3306
+            tcp_flag='0x002'
+            window_=1024
+            length=1247
+        #   ip = IP(src=src_ip, dst=dst_ip, id=ip_id, flags=ip_flags)
+            data=Raw(RandString(size=length))
+            #data="Jokes"
+            tcp_flago=int(tcp_flag,16)
+            
+            print(tcp_flago)
+            print(window_)
 
-        packet = ip / TCP(sport=src_port, dport=dest_port, flags=tcp_flago,window=window_) / data
+            packet = ip / TCP(sport=src_port, dport=dest_port, flags=tcp_flago,window=window_) / data
 
-        send(packet)
+            send(packet)
 
-        time.sleep(interval_)
+            time.sleep(interval_)
+    elif protocol==2:
+        for i in range(pkt_count):
+            ttl_=127
+            ip = IP(dst=destination_ip,ttl=ttl_)
+            
+            src_port=365#80
+            dest_port=565#80
+            tcp_flag='0x000'#'0x000'
+            window_=0#29200#1024
+            length=52# 52 adds to 60 when its sent
+        #   ip = IP(src=src_ip, dst=dst_ip, id=ip_id, flags=ip_flags)
+            data=Raw(RandString(size=length))
+            #data="Jokes"
+            tcp_flago=int(tcp_flag,16)
+            
+            #print(tcp_flago)
+            #print(window_)
 
+            packet = ip / UDP(sport=src_port, dport=dest_port) / data
+
+            send(packet)    
+            time.sleep(interval_)         
 
 def send_exfiltration_packets(pkt_count,destination_mac,destination_ip,protocol,interval_):
+    if protocol==2:
+        print("\nExfiltration option only send TCP packets: change -k value to 1")
+        exit()
+
     for i in range(pkt_count):
         ip = IP(dst=destination_ip, ttl=64)
         
         src_port=4444
         dest_port=49160  
-        tcp_flag='0x010'
+        tcp_flag='0x018'
         window_=20682
         length=60
 
@@ -124,7 +155,7 @@ def send_exfiltration_packets(pkt_count,destination_mac,destination_ip,protocol,
         print(tcp_flago)
         print(window_)
 
-        packet = ip / UDP(sport=src_port, dport=dest_port) / data
+        packet = ip / TCP(sport=src_port, dport=dest_port, flags=tcp_flago,window=window_) / data
 
 
         send(packet)
