@@ -10,4 +10,4 @@ These ML Models were trained on 4 types of threats.
 3. Keylogger Deetection
 4. Service Scan Detection
 
-Please see research Paper for summary.
+Please see research Paper for more details.
