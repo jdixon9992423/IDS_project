@@ -11,3 +11,10 @@ These ML Models were trained on 4 types of threats.
 4. Service Scan Detection
 
 Please see research Paper for more details.
+
+1. Training Step
+![Traning Steps](/Research_Paper/Training.png)
+
+
+2. Inference Step
+![Inference Steps](/Research_Paper/Detection.png)
